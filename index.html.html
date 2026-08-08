@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Locker — Resource Link Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14171F;
+    --panel: #1D2130;
+    --panel-2: #262B3D;
+    --gold: #E8B14F;
+    --teal: #4FB0A5;
+    --text: #F5F3EE;
+    --muted: #8B93A8;
+    --danger: #E8735C;
+    --line: #333A50;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap{ max-width: 640px; margin: 0 auto; padding: 48px 20px 80px; }
+  header{ display:flex; align-items:center; gap:12px; margin-bottom: 40px; }
+  .mark{
+    width: 38px; height:38px;
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700; color: var(--gold); flex-shrink:0;
+  }
+  h1{ font-family:'Space Grotesk', sans-serif; font-size: 22px; font-weight:700; margin:0; letter-spacing:-0.01em; }
+  .tagline{ color: var(--muted); font-size: 13px; margin-top:2px; }
+  .dropzone{
+    border: 1.5px dashed var(--line);
+    border-radius: 14px;
+    padding: 40px 24px;
+    text-align:center;
+    background: var(--panel);
+    transition: border-color .18s ease, background .18s ease;
+    cursor:pointer;
+  }
+  .dropzone.drag{ border-color: var(--gold); background: #23273A; }
+  .dropzone .icon{ font-family:'Space Grotesk',sans-serif; font-size: 28px; color: var(--gold); margin-bottom: 10px; }
+  .dropzone p{ margin:4px 0; }
+  .dz-title{ font-weight:600; font-size:15px; }
+  .dz-sub{ color: var(--muted); font-size: 12.5px; }
+  input[type=file]{ display:none; }
+  .limit-note{ color: var(--muted); font-size: 12px; text-align:center; margin-top: 14px; }
+  .banner{ margin-top: 16px; padding: 12px 14px; border-radius: 10px; font-size: 13px; display:none; }
+  .banner.error{ background: rgba(232,115,92,0.12); color: var(--danger); border:1px solid rgba(232,115,92,0.35); display:block; }
+  .banner.info{ background: rgba(79,176,165,0.10); color: var(--teal); border:1px solid rgba(79,176,165,0.3); display:block; }
+
+  .ticket{
+    margin-top: 28px; background: var(--panel-2); border-radius: 16px;
+    overflow:hidden; border: 1px solid var(--line); animation: rise .35s ease;
+  }
+  @keyframes rise{ from{ opacity:0; transform: translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  .ticket-top{ padding: 20px 20px 16px; display:flex; gap: 14px; align-items:flex-start; }
+  .file-badge{
+    width:44px; height:44px; border-radius:10px; background: var(--gold); color: #1A1D27;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size: 11px;
+    text-transform:uppercase; flex-shrink:0;
+  }
+  .file-name{ font-weight:600; font-size:14.5px; word-break:break-all; }
+  .file-meta{ color:var(--muted); font-size:12px; margin-top:3px; }
+  .perforation{ position:relative; height: 0; border-top: 1.5px dashed var(--line); margin: 0 0; }
+  .perforation::before, .perforation::after{
+    content:''; position:absolute; top:-9px; width:18px; height:18px;
+    background: var(--bg); border-radius:50%;
+  }
+  .perforation::before{ left:-9px; }
+  .perforation::after{ right:-9px; }
+  .ticket-bottom{ padding: 18px 20px 20px; }
+  .code-label{ font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .link-row{ display:flex; gap:8px; }
+  .link-input{
+    flex:1; background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; color: var(--teal); font-family:'IBM Plex Mono', monospace;
+    font-size: 12.5px; overflow-x:auto; white-space:nowrap;
+  }
+  button{ font-family:'Inter',sans-serif; cursor:pointer; border:none; border-radius: 8px; font-weight:600; font-size: 13px; }
+  .copy-btn{ background: var(--gold); color:#1A1D27; padding: 0 16px; flex-shrink:0; }
+  .copy-btn:active{ transform: scale(0.97); }
+  .bars{ display:flex; align-items:flex-end; gap:2px; height: 22px; margin-top: 14px; opacity: 0.5; }
+  .bars div{ background: var(--muted); width:2px; }
+
+  section.list-section{ margin-top: 44px; }
+  .list-title{
+    font-family:'Space Grotesk',sans-serif; font-size: 13px; color: var(--muted);
+    text-transform:uppercase; letter-spacing:0.06em; margin-bottom: 12px;
+  }
+  .item{
+    display:flex; align-items:center; gap:12px; padding: 12px 14px;
+    background: var(--panel); border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--line);
+  }
+  .item .file-badge{ width:34px; height:34px; font-size:10px; }
+  .item-info{ flex:1; min-width:0; }
+  .item-info .file-name{ font-size: 13px; }
+  .item-info .file-meta{ font-size: 11px; }
+  .item-actions{ display:flex; gap:6px; }
+  .icon-btn{
+    background: var(--panel-2); color: var(--text); width: 30px; height: 30px;
+    border-radius: 7px; display:flex; align-items:center; justify-content:center; font-size: 13px;
+  }
+  .icon-btn.danger:hover{ background: rgba(232,115,92,0.15); color: var(--danger); }
+  .empty{ color: var(--muted); font-size: 13px; text-align:center; padding: 24px 0; }
+
+  .dl-wrap{ max-width: 480px; margin: 0 auto; padding: 60px 20px; text-align:center; }
+  .dl-card{ background: var(--panel-2); border: 1px solid var(--line); border-radius: 18px; padding: 36px 28px; }
+  .dl-icon{
+    width: 60px; height:60px; border-radius:14px; background: var(--gold); color:#1A1D27;
+    display:flex; align-items:center; justify-content:center; margin: 0 auto 18px;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size: 13px; text-transform:uppercase;
+  }
+  .dl-name{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:17px; word-break:break-all; }
+  .dl-meta{ color:var(--muted); font-size: 13px; margin-top:6px; }
+  .dl-btn{ margin-top: 22px; width:100%; background: var(--gold); color: #1A1D27; padding: 13px; font-size: 14.5px; border-radius: 10px; }
+  .dl-back{ display:inline-block; margin-top: 18px; color: var(--muted); font-size: 12.5px; text-decoration:none; cursor:pointer; }
+  .spinner{
+    width:16px; height:16px; border: 2px solid rgba(255,255,255,0.25); border-top-color: #1A1D27;
+    border-radius:50%; display:inline-block; animation: spin .7s linear infinite; vertical-align: -3px; margin-right:6px;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  .toast{
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--panel-2); border:1px solid var(--line); color: var(--text);
+    padding: 10px 18px; border-radius: 999px; font-size: 12.5px; opacity:0; pointer-events:none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(-6px); }
+  .config-warning{
+    background: rgba(232,115,92,0.1); border:1px solid rgba(232,115,92,0.35); color: var(--danger);
+    padding: 14px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 24px; line-height:1.5;
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+// ====== APNA SUPABASE CONFIG YAHAN HAI ======
+const SUPABASE_URL = "https://grxznnzsorapzxqqmo.supabase.co";
+const SUPABASE_KEY = "sb_publishable_RcW706utF30hYvqoE4Bsig_SXBZ1A4G";
+const BUCKET = "resources";
+// =============================================
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const MAX_BYTES = 100 * 1024 * 1024; // 100MB app-side cap (Supabase free tier: 1GB total storage)
+let sessionMine = [];
+
+function fmtSize(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(2) + ' MB';
+}
+function extBadge(name, type){
+  let ext = (name.split('.').pop() || '').slice(0,4);
+  if(!ext || ext === name) ext = ((type||'').split('/')[1] || (type||'').split('/')[0] || 'file').slice(0,4);
+  return ext.toUpperCase();
+}
+function genId(){ return Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-4); }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 1800);
+}
+function buildLink(id){ return window.location.href.split('#')[0] + '#r=' + id; }
+function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function renderHome(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="wrap">
+      <header>
+        <div class="mark">L</div>
+        <div>
+          <h1>Locker</h1>
+          <div class="tagline">File upload karo, universal download-link paao</div>
+        </div>
+      </header>
+      <div class="dropzone" id="dropzone">
+        <div class="icon">⇪</div>
+        <p class="dz-title">Yahaan file drop karo, ya click karke chuno</p>
+        <p class="dz-sub">Image, PDF, doc — kuch bhi. Har file ka apna link banega.</p>
+        <input type="file" id="fileInput">
+      </div>
+      <div class="limit-note">Ek file ka size ~100 MB tak. Link kisi bhi device/browser me kaam karega.</div>
+      <div id="banner" class="banner"></div>
+      <div id="ticketSlot"></div>
+
+      <section class="list-section">
+        <div class="list-title">Aapke is session ke resources</div>
+        <div id="list"></div>
+      </section>
+    </div>
+  `;
+  const dz = document.getElementById('dropzone');
+  const input = document.getElementById('fileInput');
+  dz.addEventListener('click', ()=> input.click());
+  input.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); });
+  ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('drag'); }));
+  dz.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if(f) handleFile(f); });
+  renderList();
+}
+
+function banner(msg, type){
+  const b = document.getElementById('banner');
+  if(!b) return;
+  if(!msg){ b.className = 'banner'; b.textContent=''; return; }
+  b.className = 'banner ' + type; b.textContent = msg;
+}
+
+async function handleFile(file){
+  banner('', '');
+  document.getElementById('ticketSlot').innerHTML = '';
+  if(file.size > MAX_BYTES){
+    banner(`"${file.name}" bahut badi hai (${fmtSize(file.size)}). Limit 100 MB hai.`, 'error');
+    return;
+  }
+  banner('Upload ho raha hai…', 'info');
+  try{
+    const id = genId();
+    const path = `${id}/${file.name}`;
+    const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type || 'application/octet-stream'
+    });
+    if(error) throw error;
+
+    banner('', '');
+    const meta = { name: file.name, type: file.type || 'application/octet-stream', size: file.size, id };
+    sessionMine.unshift(meta);
+    showTicket(id, meta);
+    renderList();
+  }catch(err){
+    console.error(err);
+    banner('Upload fail ho gaya: ' + (err.message || 'kuch gadbad hui'), 'error');
+  }
+}
+
+function showTicket(id, meta){
+  const slot = document.getElementById('ticketSlot');
+  const link = buildLink(id);
+  const bars = Array.from({length: 28}).map(()=> `<div style="height:${6+Math.random()*16}px"></div>`).join('');
+  slot.innerHTML = `
+    <div class="ticket">
+      <div class="ticket-top">
+        <div class="file-badge">${extBadge(meta.name, meta.type)}</div>
+        <div>
+          <div class="file-name">${escapeHtml(meta.name)}</div>
+          <div class="file-meta">${fmtSize(meta.size)} · link taiyar hai</div>
+        </div>
+      </div>
+      <div class="perforation"></div>
+      <div class="ticket-bottom">
+        <div class="code-label">Download link</div>
+        <div class="link-row">
+          <div class="link-input" id="linkText">${link}</div>
+          <button class="copy-btn" id="copyBtn">Copy</button>
+        </div>
+        <div class="bars">${bars}</div>
+      </div>
+    </div>`;
+  document.getElementById('copyBtn').addEventListener('click', ()=> copyLink(link));
+}
+
+function copyLink(link){
+  navigator.clipboard.writeText(link).then(()=> showToast('Link copy ho gaya')).catch(()=> showToast('Copy nahi hua, manually select karo'));
+}
+window.copyLink = copyLink;
+
+function renderList(){
+  const list = document.getElementById('list');
+  if(!list) return;
+  if(sessionMine.length === 0){
+    list.innerHTML = `<div class="empty">Abhi tak koi upload nahi. Pehli file daalo upar.</div>`;
+    return;
+  }
+  list.innerHTML = sessionMine.map(item => `
+    <div class="item">
+      <div class="file-badge">${extBadge(item.name, item.type)}</div>
+      <div class="item-info">
+        <div class="file-name">${escapeHtml(item.name)}</div>
+        <div class="file-meta">${fmtSize(item.size)}</div>
+      </div>
+      <div class="item-actions">
+        <div class="icon-btn" title="Link copy karo" onclick="copyLink('${buildLink(item.id)}')">⧉</div>
+        <div class="icon-btn danger" title="Delete" onclick="deleteItem('${item.id}','${escapeHtml(item.name)}')">✕</div>
+      </div>
+    </div>`).join('');
+}
+
+async function deleteItem(id, name){
+  try{ await supabase.storage.from(BUCKET).remove([`${id}/${name}`]); }catch(e){ /* ignore */ }
+  sessionMine = sessionMine.filter(i => i.id !== id);
+  renderList();
+  showToast('Delete ho gaya');
+}
+window.deleteItem = deleteItem;
+
+async function renderDownload(id){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="dl-wrap">
+      <div class="dl-card" id="dlCard">
+        <div class="dl-icon">…</div>
+        <div class="dl-name">Load ho raha hai…</div>
+      </div>
+      <a class="dl-back" href="${window.location.href.split('#')[0]}">← Naya resource upload karein</a>
+    </div>`;
+  try{
+    const { data: files, error } = await supabase.storage.from(BUCKET).list(id);
+    if(error || !files || files.length === 0) throw new Error('not found');
+    const file = files[0];
+    const name = file.name;
+    const size = (file.metadata && file.metadata.size) || 0;
+    const type = (file.metadata && file.metadata.mimetype) || 'application/octet-stream';
+    const path = `${id}/${name}`;
+    const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    const publicUrl = pub.publicUrl;
+
+    const card = document.getElementById('dlCard');
+    card.innerHTML = `
+      <div class="dl-icon">${extBadge(name, type)}</div>
+      <div class="dl-name">${escapeHtml(name)}</div>
+      <div class="dl-meta">${fmtSize(size)} · ${type}</div>
+      <button class="dl-btn" id="downloadBtn">Download</button>`;
+    document.getElementById('downloadBtn').addEventListener('click', async ()=>{
+      const btn = document.getElementById('downloadBtn');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner"></span>Taiyar ho raha hai…`;
+      try{
+        const res = await fetch(publicUrl);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Download shuru ho gaya');
+      }catch(e){ showToast('Download fail ho gaya'); }
+      btn.disabled = false; btn.innerHTML = 'Download';
+    });
+  }catch(e){
+    document.getElementById('dlCard').innerHTML = `
+      <div class="dl-icon">✕</div>
+      <div class="dl-name">Resource nahi mila</div>
+      <div class="dl-meta">Ye link expire ho chuka ya galat hai.</div>`;
+  }
+}
+
+function route(){
+  const match = window.location.hash.match(/#r=([a-z0-9]+)/i);
+  if(match) renderDownload(match[1]); else renderHome();
+}
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>

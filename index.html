@@ -112,7 +112,6 @@
     background: var(--panel-2); color: var(--text); width: 30px; height: 30px;
     border-radius: 7px; display:flex; align-items:center; justify-content:center; font-size: 13px;
   }
-  .icon-btn.danger:hover{ background: rgba(232,115,92,0.15); color: var(--danger); }
   .empty{ color: var(--muted); font-size: 13px; text-align:center; padding: 24px 0; }
 
   .dl-wrap{ max-width: 480px; margin: 0 auto; padding: 60px 20px; text-align:center; }
@@ -131,6 +130,10 @@
     border-radius:50%; display:inline-block; animation: spin .7s linear infinite; vertical-align: -3px; margin-right:6px;
   }
   @keyframes spin{ to{ transform: rotate(360deg); } }
+  .progress-wrap{ margin-top: 14px; }
+  .progress-track{ width:100%; height: 8px; background: var(--panel-2); border-radius: 999px; overflow:hidden; border: 1px solid var(--line); }
+  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--teal), var(--gold)); width:0%; transition: width .12s linear; }
+  .progress-label{ font-size: 12px; color: var(--muted); margin-top: 6px; text-align:center; font-family:'IBM Plex Mono', monospace; }
   .toast{
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: var(--panel-2); border:1px solid var(--line); color: var(--text);
@@ -138,10 +141,6 @@
     transition: opacity .2s ease, transform .2s ease;
   }
   .toast.show{ opacity:1; transform: translateX(-50%) translateY(-6px); }
-  .config-warning{
-    background: rgba(232,115,92,0.1); border:1px solid rgba(232,115,92,0.35); color: var(--danger);
-    padding: 14px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 24px; line-height:1.5;
-  }
 </style>
 </head>
 <body>
@@ -149,17 +148,13 @@
 <div id="app"></div>
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+<script>
+// ====== APNA CLOUDINARY CONFIG ======
+const CLOUD_NAME = "uzrajutr";
+const UPLOAD_PRESET = "locker_unsigned";
+// =====================================
 
-// ====== APNA SUPABASE CONFIG YAHAN HAI ======
-const SUPABASE_URL = "https://grxznnzsorapzxqqmo.supabase.co";
-const SUPABASE_KEY = "sb_publishable_RcW706utF30hYvqoE4Bsig_SXBZ1A4G";
-const BUCKET = "resources";
-// =============================================
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-const MAX_BYTES = 100 * 1024 * 1024; // 100MB app-side cap (Supabase free tier: 1GB total storage)
+const MAX_BYTES = 100 * 1024 * 1024; // 100MB app-side cap
 let sessionMine = [];
 
 function fmtSize(bytes){
@@ -172,14 +167,25 @@ function extBadge(name, type){
   if(!ext || ext === name) ext = ((type||'').split('/')[1] || (type||'').split('/')[0] || 'file').slice(0,4);
   return ext.toUpperCase();
 }
-function genId(){ return Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-4); }
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(()=> t.classList.remove('show'), 1800);
 }
-function buildLink(id){ return window.location.href.split('#')[0] + '#r=' + id; }
 function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// Pack file metadata into the URL hash itself — no database needed at all
+function buildLink(record){
+  const packed = btoa(encodeURIComponent(JSON.stringify(record)));
+  return window.location.href.split('#')[0] + '#d=' + packed;
+}
+function unpackHash(hash){
+  try{
+    const m = hash.match(/#d=(.+)/);
+    if(!m) return null;
+    return JSON.parse(decodeURIComponent(atob(m[1])));
+  }catch(e){ return null; }
+}
 
 function renderHome(){
   const app = document.getElementById('app');
@@ -200,6 +206,7 @@ function renderHome(){
       </div>
       <div class="limit-note">Ek file ka size ~100 MB tak. Link kisi bhi device/browser me kaam karega.</div>
       <div id="banner" class="banner"></div>
+      <div id="progressSlot"></div>
       <div id="ticketSlot"></div>
 
       <section class="list-section">
@@ -224,47 +231,80 @@ function banner(msg, type){
   if(!msg){ b.className = 'banner'; b.textContent=''; return; }
   b.className = 'banner ' + type; b.textContent = msg;
 }
+function setProgress(pct, label){
+  const slot = document.getElementById('progressSlot');
+  if(!slot) return;
+  if(pct === null){ slot.innerHTML = ''; return; }
+  slot.innerHTML = `<div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="progress-label">${label}</div></div>`;
+}
 
-async function handleFile(file){
+function handleFile(file){
   banner('', '');
   document.getElementById('ticketSlot').innerHTML = '';
   if(file.size > MAX_BYTES){
     banner(`"${file.name}" bahut badi hai (${fmtSize(file.size)}). Limit 100 MB hai.`, 'error');
     return;
   }
-  banner('Upload ho raha hai…', 'info');
-  try{
-    const id = genId();
-    const path = `${id}/${file.name}`;
-    const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: file.type || 'application/octet-stream'
-    });
-    if(error) throw error;
 
-    banner('', '');
-    const meta = { name: file.name, type: file.type || 'application/octet-stream', size: file.size, id };
-    sessionMine.unshift(meta);
-    showTicket(id, meta);
-    renderList();
-  }catch(err){
-    console.error(err);
-    banner('Upload fail ho gaya: ' + (err.message || 'kuch gadbad hui'), 'error');
-  }
+  const form = new FormData();
+  form.append('file', file);
+  form.append('upload_preset', UPLOAD_PRESET);
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`);
+
+  xhr.upload.onprogress = (e)=>{
+    if(e.lengthComputable){
+      const pct = Math.round((e.loaded / e.total) * 100);
+      setProgress(pct, `Upload ho raha hai… ${pct}%`);
+    }
+  };
+
+  xhr.onload = ()=>{
+    setProgress(null);
+    try{
+      const data = JSON.parse(xhr.responseText);
+      if(xhr.status < 200 || xhr.status >= 300 || data.error){
+        throw new Error((data.error && data.error.message) || 'Upload failed');
+      }
+      const record = {
+        url: data.secure_url,
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+        size: file.size
+      };
+      sessionMine.unshift(record);
+      banner('', '');
+      showTicket(record);
+      renderList();
+    }catch(err){
+      console.error(err);
+      banner('Upload fail ho gaya: ' + err.message, 'error');
+    }
+  };
+
+  xhr.onerror = ()=>{
+    setProgress(null);
+    banner('Upload fail ho gaya. Internet check karo.', 'error');
+  };
+
+  setProgress(0, 'Upload shuru ho raha hai…');
+  xhr.send(form);
 }
 
-function showTicket(id, meta){
+function showTicket(record){
   const slot = document.getElementById('ticketSlot');
-  const link = buildLink(id);
+  const link = buildLink(record);
   const bars = Array.from({length: 28}).map(()=> `<div style="height:${6+Math.random()*16}px"></div>`).join('');
   slot.innerHTML = `
     <div class="ticket">
       <div class="ticket-top">
-        <div class="file-badge">${extBadge(meta.name, meta.type)}</div>
+        <div class="file-badge">${extBadge(record.name, record.type)}</div>
         <div>
-          <div class="file-name">${escapeHtml(meta.name)}</div>
-          <div class="file-meta">${fmtSize(meta.size)} · link taiyar hai</div>
+          <div class="file-name">${escapeHtml(record.name)}</div>
+          <div class="file-meta">${fmtSize(record.size)} · link taiyar hai</div>
         </div>
       </div>
       <div class="perforation"></div>
@@ -292,7 +332,7 @@ function renderList(){
     list.innerHTML = `<div class="empty">Abhi tak koi upload nahi. Pehli file daalo upar.</div>`;
     return;
   }
-  list.innerHTML = sessionMine.map(item => `
+  list.innerHTML = sessionMine.map((item, idx) => `
     <div class="item">
       <div class="file-badge">${extBadge(item.name, item.type)}</div>
       <div class="item-info">
@@ -300,74 +340,61 @@ function renderList(){
         <div class="file-meta">${fmtSize(item.size)}</div>
       </div>
       <div class="item-actions">
-        <div class="icon-btn" title="Link copy karo" onclick="copyLink('${buildLink(item.id)}')">⧉</div>
-        <div class="icon-btn danger" title="Delete" onclick="deleteItem('${item.id}','${escapeHtml(item.name)}')">✕</div>
+        <div class="icon-btn" title="Link copy karo" onclick="copySessionLink(${idx})">⧉</div>
       </div>
     </div>`).join('');
 }
+window.copySessionLink = function(idx){ copyLink(buildLink(sessionMine[idx])); };
 
-async function deleteItem(id, name){
-  try{ await supabase.storage.from(BUCKET).remove([`${id}/${name}`]); }catch(e){ /* ignore */ }
-  sessionMine = sessionMine.filter(i => i.id !== id);
-  renderList();
-  showToast('Delete ho gaya');
-}
-window.deleteItem = deleteItem;
-
-async function renderDownload(id){
+function renderDownload(record){
   const app = document.getElementById('app');
   app.innerHTML = `
     <div class="dl-wrap">
       <div class="dl-card" id="dlCard">
-        <div class="dl-icon">…</div>
-        <div class="dl-name">Load ho raha hai…</div>
+        <div class="dl-icon">${extBadge(record.name, record.type)}</div>
+        <div class="dl-name">${escapeHtml(record.name)}</div>
+        <div class="dl-meta">${fmtSize(record.size)} · ${record.type}</div>
+        <button class="dl-btn" id="downloadBtn">Download</button>
+        <div id="dlProgress"></div>
       </div>
       <a class="dl-back" href="${window.location.href.split('#')[0]}">← Naya resource upload karein</a>
     </div>`;
-  try{
-    const { data: files, error } = await supabase.storage.from(BUCKET).list(id);
-    if(error || !files || files.length === 0) throw new Error('not found');
-    const file = files[0];
-    const name = file.name;
-    const size = (file.metadata && file.metadata.size) || 0;
-    const type = (file.metadata && file.metadata.mimetype) || 'application/octet-stream';
-    const path = `${id}/${name}`;
-    const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
-    const publicUrl = pub.publicUrl;
+  document.getElementById('downloadBtn').addEventListener('click', async ()=>{
+    const btn = document.getElementById('downloadBtn');
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>Taiyar ho raha hai…`;
+    try{
+      const res = await fetch(record.url);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = record.name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Download shuru ho gaya');
+    }catch(e){ showToast('Download fail ho gaya'); }
+    btn.disabled = false; btn.innerHTML = 'Download';
+  });
+}
 
-    const card = document.getElementById('dlCard');
-    card.innerHTML = `
-      <div class="dl-icon">${extBadge(name, type)}</div>
-      <div class="dl-name">${escapeHtml(name)}</div>
-      <div class="dl-meta">${fmtSize(size)} · ${type}</div>
-      <button class="dl-btn" id="downloadBtn">Download</button>`;
-    document.getElementById('downloadBtn').addEventListener('click', async ()=>{
-      const btn = document.getElementById('downloadBtn');
-      btn.disabled = true;
-      btn.innerHTML = `<span class="spinner"></span>Taiyar ho raha hai…`;
-      try{
-        const res = await fetch(publicUrl);
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = name;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast('Download shuru ho gaya');
-      }catch(e){ showToast('Download fail ho gaya'); }
-      btn.disabled = false; btn.innerHTML = 'Download';
-    });
-  }catch(e){
-    document.getElementById('dlCard').innerHTML = `
-      <div class="dl-icon">✕</div>
-      <div class="dl-name">Resource nahi mila</div>
-      <div class="dl-meta">Ye link expire ho chuka ya galat hai.</div>`;
-  }
+function renderNotFound(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="dl-wrap">
+      <div class="dl-card">
+        <div class="dl-icon">✕</div>
+        <div class="dl-name">Resource nahi mila</div>
+        <div class="dl-meta">Ye link expire ho chuka ya galat hai.</div>
+      </div>
+      <a class="dl-back" href="${window.location.href.split('#')[0]}">← Naya resource upload karein</a>
+    </div>`;
 }
 
 function route(){
-  const match = window.location.hash.match(/#r=([a-z0-9]+)/i);
-  if(match) renderDownload(match[1]); else renderHome();
+  const record = unpackHash(window.location.hash);
+  if(record && record.url) renderDownload(record);
+  else if(window.location.hash) renderNotFound();
+  else renderHome();
 }
 window.addEventListener('hashchange', route);
 route();

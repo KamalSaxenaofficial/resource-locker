@@ -4,74 +4,94 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Locker — Resource Link Generator</title>
+<meta name="description" content="File upload karke instant, universal download link banao — kisi bhi device ya browser mein kaam karega.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23131A22'/%3E%3Crect x='28' y='45' width='44' height='34' rx='6' fill='none' stroke='white' stroke-width='6'/%3E%3Cpath d='M36 45 V32 a14 14 0 0 1 28 0 V45' fill='none' stroke='white' stroke-width='6'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #14171F;
-    --panel: #1D2130;
-    --panel-2: #262B3D;
-    --gold: #E8B14F;
-    --teal: #4FB0A5;
-    --text: #F5F3EE;
-    --muted: #8B93A8;
-    --danger: #E8735C;
-    --line: #333A50;
+    --bg: #FFFFFF;
+    --panel: #FFFFFF;
+    --panel-2: #F4F7F7;
+    --ink: #12181F;
+    --teal: #0EA893;
+    --teal-dark: #0B7F6F;
+    --muted: #5B6572;
+    --danger: #C0392B;
+    --line: #E4E8EA;
   }
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; }
   body{
-    background: var(--bg);
-    color: var(--text);
+    background:
+      radial-gradient(1200px 560px at 8% -8%, rgba(14,168,147,0.10), transparent 55%),
+      radial-gradient(900px 480px at 105% 5%, rgba(14,168,147,0.06), transparent 50%),
+      var(--bg);
+    color: var(--ink);
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
   }
-  .wrap{ max-width: 640px; margin: 0 auto; padding: 48px 20px 80px; }
-  header{ display:flex; align-items:center; gap:12px; margin-bottom: 40px; }
+  .wrap{ max-width: 660px; margin: 0 auto; padding: 56px 20px 90px; }
+  header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom: 44px; }
+  .brand{ display:flex; align-items:center; gap:12px; }
   .mark{
-    width: 38px; height:38px;
-    border: 2px solid var(--gold);
-    border-radius: 8px;
+    width: 40px; height:40px;
+    background: var(--ink);
+    border-radius: 10px;
     display:flex; align-items:center; justify-content:center;
     font-family:'Space Grotesk',sans-serif;
-    font-weight:700; color: var(--gold); flex-shrink:0;
+    font-weight:700; color: #fff; flex-shrink:0;
   }
-  h1{ font-family:'Space Grotesk', sans-serif; font-size: 22px; font-weight:700; margin:0; letter-spacing:-0.01em; }
+  h1{ font-family:'Space Grotesk', sans-serif; font-size: 23px; font-weight:700; margin:0; letter-spacing:-0.01em; color: var(--ink); }
   .tagline{ color: var(--muted); font-size: 13px; margin-top:2px; }
+  .badge-pill{
+    font-size: 11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase;
+    color: var(--teal-dark); background: rgba(14,168,147,0.09); border: 1px solid rgba(14,168,147,0.25);
+    padding: 5px 10px; border-radius: 999px; white-space:nowrap; flex-shrink:0;
+  }
   .dropzone{
     border: 1.5px dashed var(--line);
-    border-radius: 14px;
-    padding: 40px 24px;
+    border-radius: 16px;
+    padding: 46px 24px;
     text-align:center;
-    background: var(--panel);
-    transition: border-color .18s ease, background .18s ease;
+    background: var(--panel-2);
+    transition: border-color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease;
     cursor:pointer;
   }
-  .dropzone.drag{ border-color: var(--gold); background: #23273A; }
-  .dropzone .icon{ font-family:'Space Grotesk',sans-serif; font-size: 28px; color: var(--gold); margin-bottom: 10px; }
+  .dropzone:hover{ border-color: #b9c2c5; transform: translateY(-1px); }
+  .dropzone.drag{ border-color: var(--teal); background: rgba(14,168,147,0.06); box-shadow: 0 0 0 4px rgba(14,168,147,0.08); }
+  .dropzone .icon{
+    width: 54px; height:54px; margin: 0 auto 14px;
+    border-radius: 50%;
+    background: rgba(14,168,147,0.10);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk',sans-serif; font-size: 22px; color: var(--teal-dark);
+  }
   .dropzone p{ margin:4px 0; }
-  .dz-title{ font-weight:600; font-size:15px; }
+  .dz-title{ font-weight:600; font-size:15.5px; color: var(--ink); }
   .dz-sub{ color: var(--muted); font-size: 12.5px; }
   input[type=file]{ display:none; }
   .limit-note{ color: var(--muted); font-size: 12px; text-align:center; margin-top: 14px; }
   .banner{ margin-top: 16px; padding: 12px 14px; border-radius: 10px; font-size: 13px; display:none; }
-  .banner.error{ background: rgba(232,115,92,0.12); color: var(--danger); border:1px solid rgba(232,115,92,0.35); display:block; }
-  .banner.info{ background: rgba(79,176,165,0.10); color: var(--teal); border:1px solid rgba(79,176,165,0.3); display:block; }
+  .banner.error{ background: rgba(192,57,43,0.07); color: var(--danger); border:1px solid rgba(192,57,43,0.25); display:block; }
+  .banner.info{ background: rgba(14,168,147,0.07); color: var(--teal-dark); border:1px solid rgba(14,168,147,0.25); display:block; }
 
   .ticket{
-    margin-top: 28px; background: var(--panel-2); border-radius: 16px;
+    margin-top: 28px; background: var(--panel); border-radius: 16px;
     overflow:hidden; border: 1px solid var(--line); animation: rise .35s ease;
+    box-shadow: 0 12px 32px rgba(18,24,31,0.08);
   }
   @keyframes rise{ from{ opacity:0; transform: translateY(8px);} to{opacity:1; transform:translateY(0);} }
   .ticket-top{ padding: 20px 20px 16px; display:flex; gap: 14px; align-items:flex-start; }
   .file-badge{
-    width:44px; height:44px; border-radius:10px; background: var(--gold); color: #1A1D27;
+    width:44px; height:44px; border-radius:10px;
     display:flex; align-items:center; justify-content:center;
     font-family:'Space Grotesk',sans-serif; font-weight:700; font-size: 11px;
     text-transform:uppercase; flex-shrink:0;
   }
-  .file-name{ font-weight:600; font-size:14.5px; word-break:break-all; }
+  .file-name{ font-weight:600; font-size:14.5px; word-break:break-all; color: var(--ink); }
   .file-meta{ color:var(--muted); font-size:12px; margin-top:3px; }
   .perforation{ position:relative; height: 0; border-top: 1.5px dashed var(--line); margin: 0 0; }
   .perforation::before, .perforation::after{
@@ -80,19 +100,20 @@
   }
   .perforation::before{ left:-9px; }
   .perforation::after{ right:-9px; }
-  .ticket-bottom{ padding: 18px 20px 20px; }
+  .ticket-bottom{ padding: 18px 20px 20px; background: var(--panel-2); }
   .code-label{ font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
   .link-row{ display:flex; gap:8px; }
   .link-input{
-    flex:1; background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
-    padding: 10px 12px; color: var(--teal); font-family:'IBM Plex Mono', monospace;
+    flex:1; background: #fff; border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; color: var(--teal-dark); font-family:'IBM Plex Mono', monospace;
     font-size: 12.5px; overflow-x:auto; white-space:nowrap;
   }
-  button{ font-family:'Inter',sans-serif; cursor:pointer; border:none; border-radius: 8px; font-weight:600; font-size: 13px; }
-  .copy-btn{ background: var(--gold); color:#1A1D27; padding: 0 16px; flex-shrink:0; }
+  button{ font-family:'Inter',sans-serif; cursor:pointer; border:none; border-radius: 999px; font-weight:600; font-size: 13px; transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .15s ease; }
+  .copy-btn{ background: var(--ink); color:#fff; padding: 0 18px; flex-shrink:0; height:38px; }
+  .copy-btn:hover{ background: #262E38; }
   .copy-btn:active{ transform: scale(0.97); }
-  .bars{ display:flex; align-items:flex-end; gap:2px; height: 22px; margin-top: 14px; opacity: 0.5; }
-  .bars div{ background: var(--muted); width:2px; }
+  .bars{ display:flex; align-items:flex-end; gap:2px; height: 20px; margin-top: 14px; opacity: 0.35; }
+  .bars div{ background: var(--teal); width:2px; }
 
   section.list-section{ margin-top: 44px; }
   .list-title{
@@ -102,45 +123,61 @@
   .item{
     display:flex; align-items:center; gap:12px; padding: 12px 14px;
     background: var(--panel); border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--line);
+    transition: border-color .15s ease, box-shadow .15s ease;
   }
+  .item:hover{ border-color: #c7cdd0; box-shadow: 0 4px 14px rgba(18,24,31,0.05); }
   .item .file-badge{ width:34px; height:34px; font-size:10px; }
   .item-info{ flex:1; min-width:0; }
   .item-info .file-name{ font-size: 13px; }
   .item-info .file-meta{ font-size: 11px; }
   .item-actions{ display:flex; gap:6px; }
   .icon-btn{
-    background: var(--panel-2); color: var(--text); width: 30px; height: 30px;
-    border-radius: 7px; display:flex; align-items:center; justify-content:center; font-size: 13px;
+    background: var(--panel-2); color: var(--ink); width: 32px; height: 32px;
+    border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size: 13px;
+    cursor:pointer; transition: background .15s ease;
   }
-  .empty{ color: var(--muted); font-size: 13px; text-align:center; padding: 24px 0; }
+  .icon-btn:hover{ background: #E4E9E9; }
+  .empty{ color: var(--muted); font-size: 13px; text-align:center; padding: 28px 0; }
 
   .dl-wrap{ max-width: 480px; margin: 0 auto; padding: 60px 20px; text-align:center; }
-  .dl-card{ background: var(--panel-2); border: 1px solid var(--line); border-radius: 18px; padding: 36px 28px; }
+  .dl-card{ background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 40px 28px; box-shadow: 0 16px 40px rgba(18,24,31,0.10); }
   .dl-icon{
-    width: 60px; height:60px; border-radius:14px; background: var(--gold); color:#1A1D27;
+    width: 60px; height:60px; border-radius:14px; color:#fff;
     display:flex; align-items:center; justify-content:center; margin: 0 auto 18px;
     font-family:'Space Grotesk',sans-serif; font-weight:700; font-size: 13px; text-transform:uppercase;
   }
-  .dl-name{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:17px; word-break:break-all; }
+  .dl-name{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:17px; word-break:break-all; color: var(--ink); }
   .dl-meta{ color:var(--muted); font-size: 13px; margin-top:6px; }
-  .dl-btn{ margin-top: 22px; width:100%; background: var(--gold); color: #1A1D27; padding: 13px; font-size: 14.5px; border-radius: 10px; }
-  .dl-back{ display:inline-block; margin-top: 18px; color: var(--muted); font-size: 12.5px; text-decoration:none; cursor:pointer; }
+  .dl-btn{ margin-top: 22px; width:100%; background: var(--ink); color: #fff; padding: 14px; font-size: 14.5px; border-radius: 999px; }
+  .dl-btn:hover{ background: #262E38; }
+  .dl-btn:disabled{ opacity: 0.6; cursor:default; }
+  .dl-back{ display:inline-block; margin-top: 20px; color: var(--muted); font-size: 12.5px; text-decoration:none; cursor:pointer; transition: color .15s ease; }
+  .dl-back:hover{ color: var(--ink); }
   .spinner{
-    width:16px; height:16px; border: 2px solid rgba(255,255,255,0.25); border-top-color: #1A1D27;
+    width:16px; height:16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
     border-radius:50%; display:inline-block; animation: spin .7s linear infinite; vertical-align: -3px; margin-right:6px;
   }
   @keyframes spin{ to{ transform: rotate(360deg); } }
   .progress-wrap{ margin-top: 14px; }
-  .progress-track{ width:100%; height: 8px; background: var(--panel-2); border-radius: 999px; overflow:hidden; border: 1px solid var(--line); }
-  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--teal), var(--gold)); width:0%; transition: width .12s linear; }
+  .progress-track{ width:100%; height: 7px; background: var(--panel-2); border-radius: 999px; overflow:hidden; border: 1px solid var(--line); }
+  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--teal), var(--teal-dark)); width:0%; transition: width .12s linear; }
   .progress-label{ font-size: 12px; color: var(--muted); margin-top: 6px; text-align:center; font-family:'IBM Plex Mono', monospace; }
   .toast{
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: var(--panel-2); border:1px solid var(--line); color: var(--text);
+    background: var(--ink); border:1px solid var(--ink); color: #fff;
     padding: 10px 18px; border-radius: 999px; font-size: 12.5px; opacity:0; pointer-events:none;
     transition: opacity .2s ease, transform .2s ease;
+    box-shadow: 0 8px 24px rgba(18,24,31,0.2);
   }
   .toast.show{ opacity:1; transform: translateX(-50%) translateY(-6px); }
+  .footer{
+    margin-top: 56px; text-align:center; color: var(--muted); font-size: 11.5px;
+    padding-top: 20px; border-top: 1px solid var(--line);
+  }
+  @media (max-width: 420px){
+    header{ flex-wrap: wrap; }
+    .badge-pill{ order: 3; }
+  }
 </style>
 </head>
 <body>
@@ -167,6 +204,14 @@ function extBadge(name, type){
   if(!ext || ext === name) ext = ((type||'').split('/')[1] || (type||'').split('/')[0] || 'file').slice(0,4);
   return ext.toUpperCase();
 }
+function badgeColor(type){
+  type = type || '';
+  if(type.startsWith('image/')) return { bg:'linear-gradient(155deg, #0EA893, #0B7F6F)' };
+  if(type.startsWith('video/')) return { bg:'linear-gradient(155deg, #2E86C1, #1B5E85)' };
+  if(type === 'application/pdf') return { bg:'linear-gradient(155deg, #C0392B, #96271B)' };
+  if(type.startsWith('audio/')) return { bg:'linear-gradient(155deg, #8E6FCE, #6B4FA3)' };
+  return { bg:'linear-gradient(155deg, #5B6572, #3E4650)' };
+}
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -192,11 +237,14 @@ function renderHome(){
   app.innerHTML = `
     <div class="wrap">
       <header>
-        <div class="mark">L</div>
-        <div>
-          <h1>Locker</h1>
-          <div class="tagline">File upload karo, universal download-link paao</div>
+        <div class="brand">
+          <div class="mark">L</div>
+          <div>
+            <h1>Locker</h1>
+            <div class="tagline">File upload karo, universal download-link paao</div>
+          </div>
         </div>
+        <div class="badge-pill">100 MB tak</div>
       </header>
       <div class="dropzone" id="dropzone">
         <div class="icon">⇪</div>
@@ -213,6 +261,8 @@ function renderHome(){
         <div class="list-title">Aapke is session ke resources</div>
         <div id="list"></div>
       </section>
+
+      <footer class="footer">Files securely host hote hain aur link ke through kahin bhi accessible hain.</footer>
     </div>
   `;
   const dz = document.getElementById('dropzone');
@@ -297,11 +347,11 @@ function handleFile(file){
 function showTicket(record){
   const slot = document.getElementById('ticketSlot');
   const link = buildLink(record);
-  const bars = Array.from({length: 28}).map(()=> `<div style="height:${6+Math.random()*16}px"></div>`).join('');
+  const bars = Array.from({length: 28}).map(()=> `<div style="height:${6+Math.random()*14}px"></div>`).join('');
   slot.innerHTML = `
     <div class="ticket">
       <div class="ticket-top">
-        <div class="file-badge">${extBadge(record.name, record.type)}</div>
+        <div class="file-badge" style="background:${badgeColor(record.type).bg};">${extBadge(record.name, record.type)}</div>
         <div>
           <div class="file-name">${escapeHtml(record.name)}</div>
           <div class="file-meta">${fmtSize(record.size)} · link taiyar hai</div>
@@ -334,7 +384,7 @@ function renderList(){
   }
   list.innerHTML = sessionMine.map((item, idx) => `
     <div class="item">
-      <div class="file-badge">${extBadge(item.name, item.type)}</div>
+      <div class="file-badge" style="background:${badgeColor(item.type).bg};">${extBadge(item.name, item.type)}</div>
       <div class="item-info">
         <div class="file-name">${escapeHtml(item.name)}</div>
         <div class="file-meta">${fmtSize(item.size)}</div>
@@ -351,7 +401,7 @@ function renderDownload(record){
   app.innerHTML = `
     <div class="dl-wrap">
       <div class="dl-card" id="dlCard">
-        <div class="dl-icon">${extBadge(record.name, record.type)}</div>
+        <div class="dl-icon" style="background:${badgeColor(record.type).bg};">${extBadge(record.name, record.type)}</div>
         <div class="dl-name">${escapeHtml(record.name)}</div>
         <div class="dl-meta">${fmtSize(record.size)} · ${record.type}</div>
         <button class="dl-btn" id="downloadBtn">Download</button>
@@ -382,7 +432,7 @@ function renderNotFound(){
   app.innerHTML = `
     <div class="dl-wrap">
       <div class="dl-card">
-        <div class="dl-icon">✕</div>
+        <div class="dl-icon" style="background:linear-gradient(155deg, #C0392B, #96271B);">✕</div>
         <div class="dl-name">Resource nahi mila</div>
         <div class="dl-meta">Ye link expire ho chuka ya galat hai.</div>
       </div>

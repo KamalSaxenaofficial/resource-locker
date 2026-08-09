@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — Locker</title>
+<meta name="description" content="Log in to Locker to upload files and generate universal download links.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2312181F'/%3E%3Crect x='28' y='45' width='44' height='34' rx='6' fill='none' stroke='white' stroke-width='6'/%3E%3Cpath d='M36 45 V32 a14 14 0 0 1 28 0 V45' fill='none' stroke='white' stroke-width='6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="mark intro">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect class="body" x="4" y="11" width="16" height="10" rx="2" fill="currentColor"/>
+          <path class="shackle" d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 id="modeTitle">Log in to Locker</h1>
+      <div class="tagline" id="modeTagline">Upload files and manage your links</div>
+    </div>
+
+    <div id="authError" class="banner error" style="display:none;"></div>
+
+    <form id="authForm">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="At least 6 characters" required minlength="6" autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-primary auth-submit" id="authSubmit">Log in</button>
+    </form>
+
+    <div class="auth-switch">
+      <span id="switchLine">Don't have an account?</span>
+      <button id="switchBtn" type="button">Sign up</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>

@@ -19,8 +19,6 @@ module.exports = (req, res) => {
   }
 
   const timestamp = Math.round(Date.now() / 1000);
-  // Only "timestamp" is signed — the upload request must include exactly
-  // this parameter (besides file/api_key/signature) for the signature to match.
   const paramsToSign = `timestamp=${timestamp}`;
   const signature = crypto
     .createHash('sha1')

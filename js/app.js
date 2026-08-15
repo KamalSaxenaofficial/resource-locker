@@ -1,9 +1,9 @@
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  collection, addDoc, deleteDoc, doc, getDocs,
-  query, where, orderBy, serverTimestamp
+  doc, setDoc, deleteDoc, getDocs,
+  collection, query, where, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { auth, db, ADMIN_EMAIL, MAX_FILE_BYTES } from "./firebase-config.js";
+import { auth, db, ADMIN_EMAIL, MAX_FILE_BYTES, genShortId } from "./firebase-config.js";
 
 let currentUser = null;
 let myLinks = []; // [{ id, url, name, type, size }]
@@ -45,11 +45,10 @@ function showToast(msg){
   t.textContent = msg; t.classList.add('show');
   setTimeout(()=> t.classList.remove('show'), 1800);
 }
-// File metadata is packed straight into the URL hash — anyone opening the
-// link can download the file without needing an account.
+// Short link: just the domain + /r/ + a short random code. The actual file
+// data lives in Firestore, looked up by that code — see js/download.js.
 function buildLink(record){
-  const packed = btoa(encodeURIComponent(JSON.stringify({ url: record.url, name: record.name, type: record.type, size: record.size })));
-  return window.location.origin + window.location.pathname.replace('index.html','') + 'd.html#d=' + packed;
+  return window.location.origin + '/r/' + record.id;
 }
 function copyLink(link){
   navigator.clipboard.writeText(link).then(()=> showToast('Link copied')).catch(()=> showToast('Copy failed, please select manually'));
@@ -82,7 +81,8 @@ async function loadMyLinks(){
   }
 }
 async function saveLinkRecord(record){
-  const docRef = await addDoc(collection(db, 'links'), {
+  const id = genShortId(12);
+  await setDoc(doc(db, 'links', id), {
     uid: currentUser.uid,
     url: record.url,
     name: record.name,
@@ -90,7 +90,7 @@ async function saveLinkRecord(record){
     size: record.size,
     createdAt: serverTimestamp()
   });
-  return docRef.id;
+  return id;
 }
 
 // ---------- Rendering ----------
@@ -180,12 +180,12 @@ function handleFile(file){
 
 async function uploadWithSignature(file){
   setProgress(0, 'Preparing upload…');
-  let auth;
+  let sign;
   try{
     const signRes = await fetch('/api/sign');
     if(!signRes.ok) throw new Error('Could not authorize the upload');
-    auth = await signRes.json();
-    if(auth.error) throw new Error(auth.error);
+    sign = await signRes.json();
+    if(sign.error) throw new Error(sign.error);
   }catch(err){
     console.error(err);
     setProgress(null);
@@ -195,12 +195,12 @@ async function uploadWithSignature(file){
 
   const form = new FormData();
   form.append('file', file);
-  form.append('api_key', auth.apiKey);
-  form.append('timestamp', auth.timestamp);
-  form.append('signature', auth.signature);
+  form.append('api_key', sign.apiKey);
+  form.append('timestamp', sign.timestamp);
+  form.append('signature', sign.signature);
 
   const xhr = new XMLHttpRequest();
-  xhr.open('POST', `https://api.cloudinary.com/v1_1/${auth.cloudName}/auto/upload`);
+  xhr.open('POST', `https://api.cloudinary.com/v1_1/${sign.cloudName}/auto/upload`);
 
   xhr.upload.onprogress = (e)=>{
     if(e.lengthComputable){

@@ -1,5 +1,10 @@
-// This page needs no login and no database — the file's URL, name, type and
-// size are packed straight into the link's hash, so it works standalone.
+// Public download page. No login is required: the short ID in the URL
+// (e.g. /r/aB3xK9mZpQ7h) is looked up directly in Firestore. Firestore
+// rules allow anyone to "get" a single link document by its exact ID, but
+// not to list/browse all links — so this only works if you have the link.
+
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { db } from "./firebase-config.js";
 
 function fmtSize(bytes){
   if(bytes < 1024) return bytes + ' B';
@@ -25,12 +30,14 @@ function showToast(msg){
   t.textContent = msg; t.classList.add('show');
   setTimeout(()=> t.classList.remove('show'), 1800);
 }
-function unpackHash(hash){
-  try{
-    const m = hash.match(/#d=(.+)/);
-    if(!m) return null;
-    return JSON.parse(decodeURIComponent(atob(m[1])));
-  }catch(e){ return null; }
+
+function getIdFromUrl(){
+  // Works both via the clean /r/<id> rewrite and a direct /d.html?id=<id> visit.
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('id')) return params.get('id');
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  const last = parts[parts.length - 1];
+  return (last && last !== 'd.html') ? last : null;
 }
 
 function renderDownload(record){
@@ -76,6 +83,28 @@ function renderNotFound(){
     </div>`;
 }
 
-const record = unpackHash(window.location.hash);
-if(record && record.url) renderDownload(record);
-else renderNotFound();
+function renderLoading(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="dl-wrap">
+      <div class="dl-card">
+        <div class="dl-icon" style="background:linear-gradient(155deg, #5B6572, #3E4650);">…</div>
+        <div class="dl-name">Loading…</div>
+      </div>
+    </div>`;
+}
+
+async function main(){
+  renderLoading();
+  const id = getIdFromUrl();
+  if(!id){ renderNotFound(); return; }
+  try{
+    const snap = await getDoc(doc(db, 'links', id));
+    if(!snap.exists()){ renderNotFound(); return; }
+    renderDownload(snap.data());
+  }catch(e){
+    console.error(e);
+    renderNotFound();
+  }
+}
+main();

@@ -24,13 +24,11 @@ body{
 }
 a{ color: inherit; }
 
-/* ---------- Layout ---------- */
 .wrap{ max-width: 660px; margin: 0 auto; padding: 56px 20px 90px; }
 header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom: 44px; }
 .brand{ display:flex; align-items:center; gap:12px; }
-.header-actions{ display:flex; align-items:center; gap:10px; }
+.header-actions{ display:flex; align-items:center; gap:10px; flex-wrap: wrap; }
 
-/* ---------- Logo mark (animated lock) ---------- */
 .mark{
   width: 40px; height:40px;
   background: var(--ink);
@@ -66,7 +64,6 @@ h1{ font-family:'Space Grotesk', sans-serif; font-size: 23px; font-weight:700; m
   padding: 7px 12px; border-radius: 999px; white-space:nowrap;
 }
 
-/* ---------- Dropzone ---------- */
 .dropzone{
   border: 1.5px dashed var(--line);
   border-radius: 16px;
@@ -91,12 +88,10 @@ h1{ font-family:'Space Grotesk', sans-serif; font-size: 23px; font-weight:700; m
 input[type=file]{ display:none; }
 .limit-note{ color: var(--muted); font-size: 12px; text-align:center; margin-top: 14px; }
 
-/* ---------- Banners ---------- */
 .banner{ margin-top: 16px; padding: 12px 14px; border-radius: 10px; font-size: 13px; display:none; }
 .banner.error{ background: rgba(192,57,43,0.07); color: var(--danger); border:1px solid rgba(192,57,43,0.25); display:block; }
 .banner.info{ background: rgba(14,168,147,0.07); color: var(--teal-dark); border:1px solid rgba(14,168,147,0.25); display:block; }
 
-/* ---------- Ticket card ---------- */
 .ticket{
   margin-top: 28px; background: var(--panel); border-radius: 16px;
   overflow:hidden; border: 1px solid var(--line); animation: rise .35s ease;
@@ -125,10 +120,9 @@ input[type=file]{ display:none; }
 .link-input{
   flex:1; background: #fff; border: 1px solid var(--line); border-radius: 8px;
   padding: 10px 12px; color: var(--teal-dark); font-family:'IBM Plex Mono', monospace;
-  font-size: 12.5px; overflow-x:auto; white-space:nowrap;
+  font-size: 13px; overflow-x:auto; white-space:nowrap;
 }
 
-/* ---------- Buttons ---------- */
 button{ font-family:'Inter',sans-serif; cursor:pointer; border:none; border-radius: 999px; font-weight:600; font-size: 13px; transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .15s ease; }
 .btn-primary{ background: var(--ink); color:#fff; padding: 0 18px; height:38px; }
 .btn-primary:hover{ background: #262E38; }
@@ -145,7 +139,6 @@ button{ font-family:'Inter',sans-serif; cursor:pointer; border:none; border-radi
 .bars{ display:flex; align-items:flex-end; gap:2px; height: 20px; margin-top: 14px; opacity: 0.35; }
 .bars div{ background: var(--teal); width:2px; }
 
-/* ---------- Resource list ---------- */
 section.list-section{ margin-top: 44px; }
 .list-title{
   font-family:'Space Grotesk',sans-serif; font-size: 13px; color: var(--muted);
@@ -170,7 +163,6 @@ section.list-section{ margin-top: 44px; }
 .icon-btn:hover{ background: #E4E9E9; }
 .empty{ color: var(--muted); font-size: 13px; text-align:center; padding: 28px 0; }
 
-/* ---------- Download (recipient) view ---------- */
 .dl-wrap{ max-width: 480px; margin: 0 auto; padding: 60px 20px; text-align:center; }
 .dl-card{ background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 40px 28px; box-shadow: 0 16px 40px rgba(18,24,31,0.10); }
 .dl-icon{
@@ -186,7 +178,6 @@ section.list-section{ margin-top: 44px; }
 .dl-back{ display:inline-block; margin-top: 20px; color: var(--muted); font-size: 12.5px; text-decoration:none; cursor:pointer; transition: color .15s ease; }
 .dl-back:hover{ color: var(--ink); }
 
-/* ---------- Progress + spinner ---------- */
 .spinner{
   width:16px; height:16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
   border-radius:50%; display:inline-block; animation: spin .7s linear infinite; vertical-align: -3px; margin-right:6px;
@@ -197,7 +188,6 @@ section.list-section{ margin-top: 44px; }
 .progress-fill{ height:100%; background: linear-gradient(90deg, var(--teal), var(--teal-dark)); width:0%; transition: width .12s linear; }
 .progress-label{ font-size: 12px; color: var(--muted); margin-top: 6px; text-align:center; font-family:'IBM Plex Mono', monospace; }
 
-/* ---------- Toast ---------- */
 .toast{
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: var(--ink); border:1px solid var(--ink); color: #fff;
@@ -215,7 +205,6 @@ section.list-section{ margin-top: 44px; }
 .footer a{ color: var(--teal-dark); text-decoration:none; }
 .footer a:hover{ text-decoration:underline; }
 
-/* ---------- Auth (login/signup) ---------- */
 .auth-wrap{ max-width: 400px; margin: 0 auto; padding: 80px 20px; }
 .auth-card{ background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 36px 30px; box-shadow: 0 16px 40px rgba(18,24,31,0.08); }
 .auth-header{ display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom: 28px; }
@@ -234,7 +223,6 @@ section.list-section{ margin-top: 44px; }
 .auth-switch{ text-align:center; margin-top: 20px; font-size: 13px; color: var(--muted); }
 .auth-switch button{ background:none; color: var(--teal-dark); font-weight:600; padding:0; height:auto; text-decoration: underline; font-size: 13px; }
 
-/* ---------- Admin panel ---------- */
 .stat-row{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 36px; }
 .stat-card{ background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
 .stat-value{ font-family:'Space Grotesk',sans-serif; font-size: 26px; font-weight:700; color: var(--ink); }
@@ -247,9 +235,9 @@ section.list-section{ margin-top: 44px; }
 .admin-table td{ padding: 13px 16px; font-size: 13px; border-bottom: 1px solid var(--line); color: var(--ink); }
 .admin-table tr:last-child td{ border-bottom: none; }
 .admin-table .muted{ color: var(--muted); font-size: 12px; }
-.admin-badge{
-  font-size: 10.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;
-  padding: 3px 8px; border-radius: 999px; background: rgba(14,168,147,0.1); color: var(--teal-dark);
+.debug-box{
+  margin-top: 20px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 16px; font-family:'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--muted); white-space: pre-wrap;
 }
 
 @media (max-width: 420px){

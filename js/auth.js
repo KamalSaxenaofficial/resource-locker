@@ -18,7 +18,6 @@ const errorBanner = document.getElementById('authError');
 
 let mode = 'login'; // 'login' | 'signup'
 
-// If already logged in, skip straight to the app.
 onAuthStateChanged(auth, (user) => {
   if (user) window.location.href = 'index.html';
 });
@@ -55,7 +54,8 @@ function friendlyError(err){
   if(code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'Incorrect email or password.';
   if(code.includes('weak-password')) return 'Password should be at least 6 characters.';
   if(code.includes('invalid-email')) return 'Please enter a valid email address.';
-  return 'Something went wrong. Please try again.';
+  if(code.includes('permission-denied')) return 'Signed in, but could not save your profile (permission denied). Check Firestore rules.';
+  return 'Something went wrong: ' + (err && err.message ? err.message : 'please try again.');
 }
 
 form.addEventListener('submit', async (e) => {
@@ -70,11 +70,20 @@ form.addEventListener('submit', async (e) => {
   try{
     if(mode === 'signup'){
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        email: cred.user.email,
-        createdAt: serverTimestamp(),
-        lastLogin: serverTimestamp()
-      });
+      console.log('[auth] account created', cred.user.uid);
+      try{
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          email: cred.user.email,
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp()
+        });
+        console.log('[auth] user profile saved to Firestore');
+      }catch(profileErr){
+        // Auth account exists even if this fails — surface it clearly
+        // instead of silently losing the profile record.
+        console.error('[auth] FAILED to save user profile to Firestore:', profileErr);
+        throw profileErr;
+      }
     } else {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const ref = doc(db, 'users', cred.user.uid);
@@ -82,13 +91,13 @@ form.addEventListener('submit', async (e) => {
       if(snap.exists()){
         await setDoc(ref, { lastLogin: serverTimestamp() }, { merge: true });
       } else {
-        // Safety net: user exists in Auth but has no Firestore record yet.
+        console.warn('[auth] no Firestore profile found for existing user — creating one now');
         await setDoc(ref, { email: cred.user.email, createdAt: serverTimestamp(), lastLogin: serverTimestamp() });
       }
     }
     window.location.href = 'index.html';
   }catch(err){
-    console.error(err);
+    console.error('[auth] error:', err);
     showError(friendlyError(err));
     submitBtn.disabled = false;
     submitBtn.textContent = mode === 'login' ? 'Log in' : 'Sign up';

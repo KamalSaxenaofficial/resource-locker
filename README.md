@@ -1,8 +1,8 @@
 # Locker — Resource Link Generator
 
-Upload any file and instantly get a universal download link that works on any
-device or browser. Users log in with an email and password, and every link
-they generate is saved to their account.
+Upload any file and instantly get a short, universal download link that
+works on any device or browser. Users log in with an email and password,
+and every link they generate is saved to their account.
 
 ## How it works
 
@@ -12,8 +12,14 @@ they generate is saved to their account.
   sees the Cloudinary API secret. The secret lives only in Vercel's
   environment variables — never in this repository.
 - **Authentication:** Firebase Authentication (email/password)
-- **Database:** Firebase Firestore (stores user accounts and each user's generated links)
-- **Hosting:** Vercel (the one serverless function requires Vercel, Netlify Functions, or similar — a purely static host like GitHub Pages won't run `api/sign.js`)
+- **Database:** Firebase Firestore — stores user accounts and each user's
+  generated links (name, size, type, Cloudinary URL) under a short random ID
+- **Short links:** each link is just `yourdomain.com/r/<12-character-code>`.
+  `vercel.json` rewrites `/r/:id` to `d.html`, which looks the ID up in
+  Firestore and shows a Download button — no login needed to receive a file.
+- **Hosting:** Vercel (the serverless function and rewrite require Vercel,
+  Netlify Functions, or similar — a purely static host like GitHub Pages
+  won't run `api/sign.js` or `vercel.json` rewrites)
 
 ## Project structure
 
@@ -23,16 +29,17 @@ they generate is saved to their account.
 ├── login.html           Login / signup page
 ├── admin.html            Admin panel (restricted to the admin account)
 ├── d.html                 Public download page (no login required)
+├── vercel.json             Rewrites short /r/:id links to d.html
 ├── api/
-│   └── sign.js            Serverless function: signs Cloudinary uploads
+│   └── sign.js             Serverless function: signs Cloudinary uploads
 ├── css/
-│   └── style.css          Shared stylesheet
+│   └── style.css           Shared stylesheet
 ├── js/
-│   ├── firebase-config.js    Firebase configuration + admin email + file size cap
-│   ├── auth.js                 Login/signup logic
-│   ├── app.js                   Main app logic (upload, save, list links)
-│   ├── admin.js                 Admin panel logic
-│   └── download.js              Public download page logic
+│   ├── firebase-config.js     Firebase config + admin email + short-ID generator
+│   ├── auth.js                  Login/signup logic
+│   ├── app.js                    Main app logic (upload, save, list links)
+│   ├── admin.js                  Admin panel logic
+│   └── download.js               Public download page logic
 └── README.md
 ```
 
@@ -43,19 +50,6 @@ they generate is saved to their account.
 | Firebase config (apiKey, authDomain, etc.) | Yes — Firebase keys are public identifiers by design, protected by Firestore Security Rules | `js/firebase-config.js` |
 | Cloudinary cloud name / API key | Yes on their own | Vercel environment variables (kept out of the repo anyway, for cleanliness) |
 | **Cloudinary API secret** | **Never** — this must stay private | Vercel environment variable only |
-
-## How links work
-
-When a file is uploaded, Cloudinary returns a hosted URL. That URL — along
-with the file's name, size, and type — is packed into the link itself
-(base64-encoded in the URL hash). This means:
-
-- The recipient does **not** need an account to download a shared file.
-- No database lookup is needed to resolve a link — it's fully self-contained.
-- The link only stops working if the underlying Cloudinary file is deleted.
-
-Each generated link is also saved to the uploader's account in Firestore, so
-their upload history is visible next time they log in, from any device.
 
 ## Setting up your own copy
 
@@ -73,9 +67,6 @@ their upload history is visible next time they log in, from any device.
    - `CLOUDINARY_API_KEY`
    - `CLOUDINARY_API_SECRET`
 
-   These are read by `api/sign.js` at request time and are never exposed to
-   the browser or committed to the repo.
-
 ### Firestore security rules
 
 ```
@@ -84,12 +75,18 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
       allow read: if request.auth != null &&
-        (request.auth.uid == userId || request.auth.token.email == "ADMIN_EMAIL_HERE");
+        (request.auth.uid == userId || request.auth.token.email == "kamalsaxena.it@gmail.com");
       allow write: if request.auth != null && request.auth.uid == userId;
     }
     match /links/{linkId} {
-      allow read: if request.auth != null &&
-        (resource.data.uid == request.auth.uid || request.auth.token.email == "ADMIN_EMAIL_HERE");
+      // Anyone holding the exact short link ID can fetch that one document —
+      // this is what lets recipients download without logging in. The ID is
+      // a random 12-character code, so it can't be guessed.
+      allow get: if true;
+      // Listing/querying multiple links (used by "your saved resources" and
+      // the admin panel) still requires being the owner or the admin.
+      allow list: if request.auth != null &&
+        (resource.data.uid == request.auth.uid || request.auth.token.email == "kamalsaxena.it@gmail.com");
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
       allow update: if false;
@@ -98,7 +95,8 @@ service cloud.firestore {
 }
 ```
 
-Replace `ADMIN_EMAIL_HERE` with your actual admin email in both places.
+If you use a different admin email, replace `kamalsaxena.it@gmail.com` in
+both places (and in `js/firebase-config.js`).
 
 ## Deploying (GitHub + Vercel)
 
@@ -111,10 +109,10 @@ git remote add origin <your-repo-url>
 git push -u origin main
 ```
 
-Import the repository into [Vercel](https://vercel.com) as a project, add
-the three `CLOUDINARY_*` environment variables in the project's settings,
-then deploy. `api/sign.js` is automatically detected and deployed as a
-serverless function — no extra configuration needed.
+Import the repository into [Vercel](https://vercel.com), add the three
+`CLOUDINARY_*` environment variables in the project's settings, then deploy.
+`api/sign.js` and `vercel.json` are detected automatically — no extra
+configuration needed.
 
 ## Limits to be aware of
 
@@ -131,7 +129,27 @@ serverless function — no extra configuration needed.
   them, by design.
 - The admin panel only shows account metadata: email, sign-up date, last
   login, and number of links generated.
-- Uploads are signed server-side (see `api/sign.js`), so no Cloudinary
-  secret is ever exposed to the browser or the public repository. If you
-  previously used an **unsigned** upload preset, delete or disable it in
-  Cloudinary now that signed uploads are in place.
+- Uploads are signed server-side (`api/sign.js`), so no Cloudinary secret is
+  ever exposed to the browser or the public repository.
+- Short link IDs are random 12-character codes (71 bits of entropy) — not
+  sequential or guessable. Firestore rules only allow fetching one document
+  at a time by its exact ID; browsing/listing all links is restricted to
+  their owner or the admin.
+
+## Troubleshooting: "a user signed up but doesn't show in the admin panel"
+
+This means the Firebase Authentication account was created, but the
+matching Firestore `users/{uid}` profile document failed to save (usually a
+Firestore rules or timing issue). To debug:
+
+1. Open the browser console (F12 → Console) *before* signing up.
+2. Sign up with a new email and watch for a `[auth]` log line. A red
+   `FAILED to save user profile` error will show the exact reason.
+3. Make sure the Firestore rules above are published (Firebase console →
+   Firestore → Rules → Publish) — a common cause is still being on the
+   default test-mode rules from initial setup, or a stale rule that doesn't
+   match the current `ADMIN_EMAIL`.
+4. Compare Firebase console → Authentication → Users (the source of truth
+   for accounts) against Firestore → `users` collection (the source of
+   truth for admin-panel profiles) — the admin panel also shows a small
+   debug line at the bottom of the user table with the live document count.

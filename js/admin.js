@@ -8,7 +8,6 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   if(user.email !== ADMIN_EMAIL){
-    // Not the admin account — send them back to the regular app.
     window.location.href = 'index.html';
     return;
   }
@@ -57,6 +56,7 @@ function renderShell(user){
 
       <div class="list-title">All users</div>
       <div id="tableSlot"><div class="empty">Loading…</div></div>
+      <div id="debugSlot"></div>
 
       <footer class="footer">Passwords are securely hashed by Firebase Authentication and are never visible here, by design.</footer>
     </div>
@@ -69,13 +69,16 @@ function renderShell(user){
 
 async function loadData(){
   try{
-    const [usersSnap, linksSnap] = await Promise.all([
-      getDocs(collection(db, 'users')),
-      getDocs(collection(db, 'links'))
-    ]);
-
+    const usersSnap = await getDocs(collection(db, 'users'));
     const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const links = linksSnap.docs.map(d => d.data());
+
+    let links = [];
+    try{
+      const linksSnap = await getDocs(collection(db, 'links'));
+      links = linksSnap.docs.map(d => d.data());
+    }catch(linksErr){
+      console.warn('[admin] could not load links (rules may restrict cross-user list):', linksErr);
+    }
 
     const linkCountByUid = {};
     links.forEach(l => { linkCountByUid[l.uid] = (linkCountByUid[l.uid] || 0) + 1; });
@@ -124,8 +127,12 @@ async function loadData(){
         </tbody>
       </table>
     `;
+
+    document.getElementById('debugSlot').innerHTML =
+      `<div class="debug-box">Firestore "users" collection: ${users.length} document(s) found.\nIf this differs from Firebase Authentication → Users, some sign-ups did not save a profile — check the browser console (F12) during signup for a "[auth]" error.</div>`;
   }catch(err){
-    console.error(err);
-    document.getElementById('tableSlot').innerHTML = `<div class="empty">Could not load data. Check Firestore rules.</div>`;
+    console.error('[admin] load error:', err);
+    document.getElementById('tableSlot').innerHTML = `<div class="empty">Could not load data.</div>`;
+    document.getElementById('debugSlot').innerHTML = `<div class="debug-box">Error: ${escapeHtml(err.message || String(err))}\nThis usually means the Firestore security rules need to be updated — see README.md.</div>`;
   }
 }

@@ -96,29 +96,19 @@ async function saveLinkRecord(record){
 // ---------- Rendering ----------
 function renderApp(){
   const isAdmin = currentUser.email === ADMIN_EMAIL;
+
+  document.getElementById('navUserEmail').textContent = currentUser.email;
+  if(isAdmin){
+    document.getElementById('navAdminLink').style.display = 'inline';
+  }
+  document.getElementById('navLogoutBtn').addEventListener('click', async ()=>{
+    await signOut(auth);
+    window.location.href = 'login.html';
+  });
+
   const app = document.getElementById('app');
   app.innerHTML = `
-    <div class="wrap">
-      <header>
-        <div class="brand">
-          <div class="mark intro">
-            <svg viewBox="0 0 24 24" fill="none">
-              <rect class="body" x="4" y="11" width="16" height="10" rx="2" fill="currentColor"/>
-              <path class="shackle" d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div>
-            <h1>Locker</h1>
-            <div class="tagline">Upload a file, get a universal download link</div>
-          </div>
-        </div>
-        <div class="header-actions">
-          <span class="user-pill">${escapeHtml(currentUser.email)}</span>
-          ${isAdmin ? `<button class="btn-secondary" onclick="window.location.href='admin.html'">Admin</button>` : ''}
-          <button class="btn-secondary" id="logoutBtn">Log out</button>
-        </div>
-      </header>
-
+    <div class="wrap" id="uploadSection">
       <div class="dropzone" id="dropzone">
         <div class="icon">⇪</div>
         <p class="dz-title">Drop a file here, or click to choose</p>
@@ -130,7 +120,7 @@ function renderApp(){
       <div id="progressSlot"></div>
       <div id="ticketSlot"></div>
 
-      <section class="list-section">
+      <section class="list-section" id="savedSection">
         <div class="list-title">Your saved resources</div>
         <div id="list"><div class="empty">Loading…</div></div>
       </section>
@@ -138,11 +128,6 @@ function renderApp(){
       <footer class="footer">Files are securely hosted and reachable from anywhere via their link.</footer>
     </div>
   `;
-
-  document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-    await signOut(auth);
-    window.location.href = 'login.html';
-  });
 
   const dz = document.getElementById('dropzone');
   const input = document.getElementById('fileInput');

@@ -12,6 +12,52 @@
 </head>
 <body>
 
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="mark intro" style="width:32px;height:32px;">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect class="body" x="4" y="11" width="16" height="10" rx="2" fill="currentColor"/>
+          <path class="shackle" d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      Locker
+    </div>
+    <div class="nav-links">
+      <a href="#uploadSection">Upload</a>
+      <a href="#savedSection">My Files</a>
+      <a href="admin.html" id="navAdminLink" class="admin-link" style="display:none;">Admin</a>
+    </div>
+    <div class="nav-right">
+      <span class="user-pill" id="navUserEmail"></span>
+      <button class="btn-secondary" id="navLogoutBtn">Log out</button>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="eyebrow">Locker · File Sharing</div>
+      <h1>Your files, one simple link away.</h1>
+      <p>Upload any file — images, PDFs, documents, anything — and get a short, universal download link that opens on any device or browser, instantly.</p>
+      <a href="#uploadSection" class="btn-primary hero-cta">Start uploading ↓</a>
+    </div>
+    <div class="hero-photo-wrap">
+      <div class="hero-photo-bg">
+        <img src="assets/creator.png" alt="Kamal Saxena" class="hero-photo">
+      </div>
+      <div class="hero-card">
+        <span class="dot"></span>
+        <div>
+          <div class="hero-card-name">Kamal Saxena</div>
+          <div class="hero-card-role">Creator &amp; Developer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <div id="app"></div>
 <div class="toast" id="toast"></div>
 
